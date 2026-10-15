@@ -84,11 +84,12 @@ final class CampaignRepository
 
         $row = $this->db->fetchOne(
             <<<'SQL'
-                INSERT INTO core.campaigns (slug, name, notes, is_active, trash_mode, trash_url, sticky_offer)
-                VALUES (:slug, :name, :notes, :is_active, :trash_mode, :trash_url, :sticky_offer)
+                INSERT INTO core.campaigns (slug, name, notes, is_active, trash_mode, trash_url, sticky_offer, flow_rotation)
+                VALUES (:slug, :name, :notes, :is_active, :trash_mode, :trash_url, :sticky_offer, :flow_rotation)
                 RETURNING *
             SQL,
             [
+                'flow_rotation' => (string)($data['flow_rotation'] ?? 'position'),
                 'slug'         => $slug,
                 'name'         => (string)($data['name'] ?? ''),
                 'notes'        => isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
@@ -108,6 +109,7 @@ final class CampaignRepository
     public function update(string $id, array $data): ?Campaign
     {
         $params = [
+            'flow_rotation' => $data['flow_rotation'] ?? null,
             'id'         => $id,
             'slug'       => (string)($data['slug'] ?? ''),
             'name'       => (string)($data['name'] ?? ''),
@@ -127,6 +129,7 @@ final class CampaignRepository
                     trash_mode = :trash_mode,
                     trash_url = :trash_url,
                     sticky_offer = :sticky_offer,
+                    flow_rotation = COALESCE(:flow_rotation, flow_rotation),
                     updated_at = now()
                 WHERE id = :id
                 RETURNING *

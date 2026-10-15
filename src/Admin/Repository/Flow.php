@@ -28,6 +28,7 @@ final readonly class Flow
         public ?bool $stickyOffer,   // null = inherit campaign; true/false = override
         public DateTimeImmutable $createdAt,
         public DateTimeImmutable $updatedAt,
+        public string $flowType = 'regular',
     ) {}
 
     /** @param array<string,mixed> $row */
@@ -48,6 +49,7 @@ final readonly class Flow
             stickyOffer:   array_key_exists('sticky_offer', $row) && $row['sticky_offer'] !== null ? (bool)$row['sticky_offer'] : null,
             createdAt:     new DateTimeImmutable((string)$row['created_at']),
             updatedAt:     new DateTimeImmutable((string)$row['updated_at']),
+            flowType:      (string)($row['flow_type'] ?? 'regular'),
         );
     }
 

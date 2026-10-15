@@ -7,6 +7,7 @@ namespace App\Engine;
 use App\Admin\Repository\Flow;
 use App\Admin\Repository\FlowRepository;
 use App\Shared\TestLink;
+use Closure;
 
 final class FlowMatcher
 {
@@ -14,23 +15,48 @@ final class FlowMatcher
     private array $cache = [];
     private const CACHE_TTL = 60; // seconds — cheap invalidation
 
+    /** @param null|Closure(int, int): int $draw */
     public function __construct(
         private readonly FlowRepository $repo,
         private readonly FilterCompiler $compiler,
+        private readonly ?Closure $draw = null,
     ) {}
 
-    public function match(string $campaignId, Context $ctx): ?Flow
+    public function match(string $campaignId, Context $ctx, string $rotation = 'position'): ?Flow
     {
-        $flows = $this->cachedFlows($campaignId);
-        foreach ($flows as $flow) {
+        $ctx->matchedFlowId = null;
+        $regular = [];
+        $default = null;
+        $total = 0;
+        foreach ($this->cachedFlows($campaignId) as $flow) {
             if (!$flow->isActive) continue;
             $predicate = $this->compiler->compile($flow->filters);
-            if ($predicate($ctx)) {
+            if (!$predicate($ctx)) continue;
+            if ($flow->flowType === 'forced') {
                 $ctx->matchedFlowId = $flow->id;
                 return $flow;
             }
+            if ($flow->flowType === 'default') {
+                $default ??= $flow;
+            } elseif ($rotation !== 'weight' || $flow->weight > 0) {
+                $regular[] = $flow;
+                $total += $flow->weight;
+            }
         }
-        return null;
+
+        $selected = $regular[0] ?? $default;
+        if ($rotation === 'weight' && $regular !== []) {
+            $draw = $this->draw === null ? random_int(1, $total) : ($this->draw)(1, $total);
+            foreach ($regular as $flow) {
+                $draw -= $flow->weight;
+                if ($draw <= 0) {
+                    $selected = $flow;
+                    break;
+                }
+            }
+        }
+        $ctx->matchedFlowId = $selected?->id;
+        return $selected;
     }
 
 

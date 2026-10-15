@@ -84,7 +84,7 @@ final class ClickHandler
             }
         }
 
-        $flow ??= $this->matcher->match($campaign->id, $ctx);
+        $flow ??= $this->matcher->match($campaign->id, $ctx, $campaign->flowRotation);
         $resp = $this->route($campaign, $ctx, $flow, $request, $response, $needCookie);
         if ($testMode === null) {
             return $resp;

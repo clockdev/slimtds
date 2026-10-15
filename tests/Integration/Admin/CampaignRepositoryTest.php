@@ -85,3 +85,13 @@ test('slugExists check', function (): void {
     expect($this->repo->slugExists('exists00', $c->id))->toBeFalse();  // excludes own
     expect($this->repo->slugExists('nothere'))->toBeFalse();
 });
+
+test('rotation defaults and survives omitted update', function (): void {
+    $c = $this->repo->create(['name' => 'Default', 'slug' => 'rotation']);
+    expect($c->flowRotation)->toBe('position');
+    $c = $this->repo->update($c->id, ['name' => 'Weighted', 'slug' => 'rotation', 'flow_rotation' => 'weight']);
+    expect($c->flowRotation)->toBe('weight');
+    $c = $this->repo->update($c->id, ['name' => 'Retained', 'slug' => 'rotation']);
+    expect($this->repo->findBySlug('rotation')->flowRotation)->toBe('weight');
+    expect($c->flowRotation)->toBe('weight');
+});

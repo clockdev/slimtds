@@ -20,7 +20,7 @@ final class FlowRepository
     public function forCampaign(string $campaignId): array
     {
         $rows = $this->db->fetchAll(
-            'SELECT * FROM core.flows WHERE campaign_id = :cid ORDER BY position, created_at',
+            'SELECT * FROM core.flows WHERE campaign_id = :cid ORDER BY position, created_at, id',
             ['cid' => $campaignId],
         );
         return array_map(Flow::fromRow(...), $rows);
@@ -71,12 +71,13 @@ final class FlowRepository
         $row = $this->db->fetchOne(
             <<<'SQL'
                 INSERT INTO core.flows
-                    (campaign_id, name, filters, target_type, target_offers, schema_id, schema_config, weight, position, is_active, sticky_offer)
+                    (campaign_id, name, filters, target_type, target_offers, schema_id, schema_config, weight, position, is_active, sticky_offer, flow_type)
                 VALUES
-                    (:cid, :name, :filters::jsonb, :target_type, :target_offers::jsonb, :schema_id, :schema_config::jsonb, :weight, :position, :is_active, :sticky_offer)
+                    (:cid, :name, :filters::jsonb, :target_type, :target_offers::jsonb, :schema_id, :schema_config::jsonb, :weight, :position, :is_active, :sticky_offer, :flow_type)
                 RETURNING *
             SQL,
             [
+                'flow_type'      => (string)($data['flow_type'] ?? 'regular'),
                 'cid'            => $campaignId,
                 'name'           => (string)($data['name'] ?? ''),
                 'filters'        => $this->encode($data['filters'] ?? []),
@@ -108,11 +109,13 @@ final class FlowRepository
                     weight        = :weight,
                     is_active     = :is_active,
                     sticky_offer  = :sticky_offer,
+                    flow_type     = COALESCE(:flow_type, flow_type),
                     updated_at    = now()
                 WHERE id = :id
                 RETURNING *
             SQL,
             [
+                'flow_type'      => $data['flow_type'] ?? null,
                 'id'             => $id,
                 'name'           => (string)($data['name'] ?? ''),
                 'filters'        => $this->encode($data['filters'] ?? []),

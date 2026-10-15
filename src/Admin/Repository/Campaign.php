@@ -21,6 +21,7 @@ final readonly class Campaign
         public bool $stickyOffer,        // true = consistent-hash per visitor; false = rotate by weight
         public DateTimeImmutable $createdAt,
         public DateTimeImmutable $updatedAt,
+        public string $flowRotation = 'position',
     ) {}
 
     /** @param array<string,mixed> $row */
@@ -39,6 +40,7 @@ final readonly class Campaign
             stickyOffer:    (bool)($row['sticky_offer'] ?? true),
             createdAt:      new DateTimeImmutable((string)$row['created_at']),
             updatedAt:      new DateTimeImmutable((string)$row['updated_at']),
+            flowRotation:   (string)($row['flow_rotation'] ?? 'position'),
         );
     }
 

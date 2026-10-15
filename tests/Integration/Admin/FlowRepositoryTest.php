@@ -119,3 +119,22 @@ test('countsByCampaign works', function (): void {
     $counts = $this->repo->countsByCampaign([$this->campaign->id]);
     expect($counts[$this->campaign->id])->toBe(2);
 });
+
+test('flow type defaults and survives omitted update with legacy negative weight', function (): void {
+    $f = $this->repo->create($this->campaign->id, ['name' => 'Default', 'weight' => -7]);
+    expect($f->flowType)->toBe('regular')->and($f->weight)->toBe(-7);
+    $f = $this->repo->update($f->id, ['name' => 'Forced', 'flow_type' => 'forced', 'weight' => -7]);
+    expect($f->flowType)->toBe('forced');
+    $f = $this->repo->update($f->id, ['name' => 'Retained', 'weight' => -7]);
+    expect($this->repo->findById($f->id)->flowType)->toBe('forced');
+    expect($f->weight)->toBe(-7);
+});
+
+test('equal position and creation time order by id', function (): void {
+    $a = $this->repo->create($this->campaign->id, ['name' => 'A']);
+    $b = $this->repo->create($this->campaign->id, ['name' => 'B']);
+    $this->db->execute("UPDATE core.flows SET position = 1, created_at = '2026-01-01' WHERE campaign_id = :id", ['id' => $this->campaign->id]);
+    $ids = [$a->id, $b->id];
+    sort($ids);
+    expect(array_map(fn ($f) => $f->id, $this->repo->forCampaign($this->campaign->id)))->toBe($ids);
+});

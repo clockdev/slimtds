@@ -40,9 +40,16 @@ final class FlowForm
             $errors['target_offers'] = 'validation.pattern';
         }
 
-        $weight = (int)($data['weight'] ?? 100);
-        if ($weight < 0 || $weight > 1000) {
+        $weight = $data['weight'] ?? 100;
+        if (array_key_exists('weight', $data)
+            && ((!is_int($data['weight']) && !is_string($data['weight']))
+                || !preg_match('/^[0-9]+$/D', (string)$weight) || (float)$weight > 1000)) {
             $errors['weight'] = 'validation.pattern';
+        }
+
+        if (array_key_exists('flow_type', $data)
+            && (!is_string($data['flow_type']) || !in_array($data['flow_type'], ['forced', 'regular', 'default'], true))) {
+            $errors['flow_type'] = 'validation.pattern';
         }
 
         return $errors;

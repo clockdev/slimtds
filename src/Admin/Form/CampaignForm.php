@@ -59,6 +59,11 @@ final class CampaignForm
             }
         }
 
+        if (array_key_exists('flow_rotation', $data)
+            && (!is_string($data['flow_rotation']) || !in_array($data['flow_rotation'], ['position', 'weight'], true))) {
+            $errors['flow_rotation'] = 'validation.pattern';
+        }
+
         return $errors;
     }
 }

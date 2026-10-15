@@ -159,8 +159,8 @@ final class FlowController
     /**
      * Swap a flow's position with its neighbour. ?dir=up moves it before the
      * previous active sibling; ?dir=down moves it after the next sibling.
-     * Matters because FlowMatcher returns the first matching flow — earlier
-     * positions take priority (e.g. bot trap should be above country filters).
+     * Position orders eligible flows within each type, except regular flows
+     * in weighted campaigns, which are selected by relative positive weight.
      */
     public function move(ServerRequestInterface $request, ResponseInterface $response, string $cid, string $id): ResponseInterface
     {

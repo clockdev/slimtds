@@ -91,6 +91,25 @@ $renderSettings = function () use ($campaign, $action, $errors, $csrf_token, $ti
                 <?php if (isset($errors['slug'])): ?><p class="form-error"><?= e(t($errors['slug'])) ?></p><?php endif; ?>
             </div>
             <div class="form-row">
+                <?php
+                $oldValues = $GLOBALS['__old_bag__'] ?? [];
+                $raw = array_key_exists('flow_rotation', $oldValues) ? $oldValues['flow_rotation'] : $campaign?->flowRotation ?? 'position';
+                $selected = is_string($raw) ? $raw : json_encode($raw);
+                ?>
+                <label class="label-uppercase" for="flow_rotation"><?= e(t('campaigns.flow_rotation')) ?></label>
+                <select id="flow_rotation" name="flow_rotation" class="input">
+                    <?php if (!in_array($selected, ['position', 'weight'], true)): ?>
+                        <option value="<?= e($selected) ?>" selected><?= e($selected) ?></option>
+                    <?php endif; ?>
+                    <?php foreach (['position', 'weight'] as $option): ?>
+                        <option value="<?= e($option) ?>" <?= $selected === $option ? 'selected' : '' ?>><?= e(t('campaigns.flow_rotation_' . $option)) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?php if (isset($errors['flow_rotation'])): ?><p class="form-error"><?= e(t($errors['flow_rotation'])) ?></p><?php endif; ?>
+                <p class="form-help"><?= e(t('campaigns.rotation_hint')) ?></p>
+            </div>
+
+            <div class="form-row">
                 <label class="label-uppercase" for="notes"><?= e(t('campaigns.notes')) ?></label>
                 <textarea id="notes" name="notes" rows="3" class="input"><?= e(old('notes', $campaign?->notes ?? '')) ?></textarea>
             </div>
@@ -129,6 +148,7 @@ $renderSettings = function () use ($campaign, $action, $errors, $csrf_token, $ti
         <div class="form-section">
             <span class="form-section-label"><?= e(t('campaigns.section_state')) ?></span>
             <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:0.875rem;font-family:var(--font-sans);color:var(--color-stone-700)">
+                <input type="hidden" name="is_active" value="0">
                 <input type="checkbox" id="is_active" name="is_active" value="1" <?= old('is_active', $campaign?->isActive ?? true) ? 'checked' : '' ?>>
                 <?= e(t('campaigns.is_active')) ?>
             </label>
@@ -190,7 +210,7 @@ $renderSettings = function () use ($campaign, $action, $errors, $csrf_token, $ti
         </a>
     </div>
     <p style="font-size:0.82rem;color:var(--color-muted);font-family:var(--font-sans);margin-bottom:16px;line-height:1.5;max-width:60ch">
-        <?= e(t('campaigns.flows_intro')) ?>
+        <?= e(t('campaigns.flow_rotation_' . $campaign->flowRotation)) ?> · <?= e(t('campaigns.flows_intro')) ?>
     </p>
 
     <div style="border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);padding:14px 16px;margin-bottom:16px;max-width:880px">
@@ -245,6 +265,7 @@ $renderSettings = function () use ($campaign, $action, $errors, $csrf_token, $ti
                                style="font-family:var(--font-display);font-size:1rem;font-weight:600;color:var(--color-text);text-decoration:none;letter-spacing:-0.01em"><?= e($f->name) ?></a>
                             <span class="badge <?= $f->isActive ? 'badge-success' : 'badge-ghost' ?>"><?= e($f->isActive ? t('flows.status_active') : t('flows.status_inactive')) ?></span>
                             <span class="badge badge-neutral"><?= e(t('schemas.' . $f->schemaId)) ?></span>
+                            <span class="badge badge-neutral"><?= e(t('flows.flow_type_' . $f->flowType)) ?> · <?= (int)$f->weight ?></span>
                         </div>
 
                         <!-- Filters preview -->
@@ -724,7 +745,8 @@ $renderSettings = function () use ($campaign, $action, $errors, $csrf_token, $ti
                             </span>
                             <span class="diag-card-title"><?= e($campaign->name) ?></span>
                         </div>
-                        <div class="diag-card-sub"><?= e($campaign->slug) ?></div>
+                        <div class="diag-card-sub"><?= e($campaign->slug) ?> · <?= e(t('campaigns.flow_rotation_' . $campaign->flowRotation)) ?></div>
+                        <p class="form-help"><?= e(t('campaigns.flows_intro')) ?></p>
                         <div class="diag-card-bar">
                             <span class="diag-pill <?= $campaign->isActive ? 'diag-pill-success' : '' ?>">
                                 <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:<?= $campaign->isActive ? '#3b8a4f' : '#a8a399' ?>"></span>
@@ -755,6 +777,7 @@ $renderSettings = function () use ($campaign, $action, $errors, $csrf_token, $ti
                                     <?= e($f->isActive ? t('flows.status_active') : t('flows.status_inactive')) ?>
                                 </span>
                                 <span class="diag-pill diag-pill-schema"><?= e(t('schemas.' . $f->schemaId)) ?></span>
+                                <span class="diag-pill"><?= e(t('flows.flow_type_' . $f->flowType)) ?></span>
                                 <span class="diag-pill diag-pill-mono">w <?= (int)$f->weight ?></span>
                             </div>
                             <div class="diag-filters">

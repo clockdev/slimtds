@@ -42,6 +42,10 @@ dashboard:
   auth_events: Активность входа
 
 campaigns:
+  flow_rotation: Распределение потоков
+  flow_rotation_position: По позиции
+  flow_rotation_weight: По весу
+  rotation_hint: 'Относительные веса потоков (целые 0–1000) действуют только для обычных потоков в режиме по весу; ноль исключает обычный поток. На малой выборке доли могут отличаться. Веса оферов независимы.'
   title: Кампании
   copy_traffic_url: Копировать traffic URL
   url_copied: 'Traffic URL скопирован: {url}'
@@ -102,7 +106,7 @@ campaigns:
   section_identity: Идентификация
   section_routing: Маршрутизация
   section_state: Состояние
-  flows_intro: 'Правила распределения. Проверяются по порядку. Каждый флоу содержит фильтры (geo/device/...) и список целевых оферов с весами — это как «офер подключается к кампании».'
+  flows_intro: 'После фильтров: принудительные → обычные → резервные. Обычные выбираются по позиции или положительным относительным весам согласно режиму кампании. Веса оферов независимы.'
   any_traffic: любой трафик
   no_target_offers: '— нет целевых оферов (terminal schema)'
   flow_edit: edit
@@ -119,7 +123,7 @@ campaigns:
   postback_empty_title: Сначала подключите офер через флоу
   postback_empty_text: 'Postback-токен генерится для каждого офера. Создайте офер, подключите его в флоу — токен и URL появятся здесь.'
   diagram_col_campaign: Campaign
-  diagram_col_flows: 'Потоки · в порядке проверки'
+  diagram_col_flows: 'Потоки · тип и режим кампании'
   diagram_col_targets: 'Цели · оферы с весами'
   diagram_any_traffic: '— любой трафик —'
   diagram_trash_fallback: 'Trash · fallback'
@@ -204,6 +208,10 @@ offers:
   empty_hint: 'Создайте первый офер — URL с макросами {click_id}/{country}/{payout}, и payout по умолчанию.'
 
 flows:
+  flow_type: Тип потока
+  flow_type_forced: Принудительный
+  flow_type_regular: Обычный
+  flow_type_default: Резервный
   title: Потоки
   list_title: 'Потоки: {campaign}'
   create: Создать поток

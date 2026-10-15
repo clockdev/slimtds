@@ -10,9 +10,9 @@ $action   = $flow === null
     : url('/admin/campaigns/' . $campaign->id . '/flows/' . $flow->id);
 $titleKey = $flow === null ? 'flows.create' : 'flows.edit';
 
-$initialFilters      = $flow?->filters ?? [];
-$initialTargetOffers = $flow?->targetOffers ?? [];
-$initialSchemaConfig = $flow?->schemaConfig ?? [];
+$initialFilters      = json_decode(old('filters', json_encode($flow?->filters ?? [])), true) ?? [];
+$initialTargetOffers = json_decode(old('target_offers', json_encode($flow?->targetOffers ?? [])), true) ?? [];
+$initialSchemaConfig = json_decode(old('schema_config', json_encode($flow?->schemaConfig ?? [])), true) ?? [];
 
 $filterFields = ['country','region','city','asn','device','os','browser','lang','is_bot','bot_name','is_uniq','referer','referer_domain','utm_source','utm_medium','utm_campaign','utm_term','utm_content','time_hour','day_of_week','ip_in_list'];
 $filterOps    = ['eq','neq','in','not_in','regex','gt','lt','between','exists'];
@@ -59,8 +59,8 @@ $countries = $_lang === 'en' ? $countriesEn : $countriesRu;
          initialFilters: <?= htmlspecialchars(json_encode($initialFilters, JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>,
          initialTargetOffers: <?= htmlspecialchars(json_encode($initialTargetOffers, JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>,
          initialSchemaConfig: <?= htmlspecialchars(json_encode($initialSchemaConfig, JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>,
-         initialSchemaId: <?= (int)($flow?->schemaId ?? 2) ?>,
-         initialTargetType: <?= htmlspecialchars(json_encode($flow?->targetType ?? 'offers'), ENT_QUOTES) ?>,
+         initialSchemaId: <?= (int)old('schema_id', $flow?->schemaId ?? 2) ?>,
+         initialTargetType: <?= htmlspecialchars(json_encode(old('target_type', $flow?->targetType ?? 'offers')), ENT_QUOTES) ?>,
          availableOffers: <?= htmlspecialchars(json_encode($offersForJs, JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>
      })">
 
@@ -107,14 +107,37 @@ $countries = $_lang === 'en' ? $countriesEn : $countriesRu;
                     <?php if (isset($errors['name'])): ?><p class="form-error"><?= e(t($errors['name'])) ?></p><?php endif; ?>
                 </div>
 
+                <div class="form-row">
+                    <?php
+                    $oldValues = $GLOBALS['__old_bag__'] ?? [];
+                    $raw = array_key_exists('flow_type', $oldValues) ? $oldValues['flow_type'] : $flow?->flowType ?? 'regular';
+                    $selected = is_string($raw) ? $raw : json_encode($raw);
+                    $rawWeight = array_key_exists('weight', $oldValues) ? $oldValues['weight'] : $flow?->weight ?? 100;
+                    $weightValue = is_scalar($rawWeight) ? (string)$rawWeight : json_encode($rawWeight);
+                    ?>
+                    <label class="label-uppercase" for="flow_type"><?= e(t('flows.flow_type')) ?></label>
+                    <select id="flow_type" name="flow_type" class="input">
+                        <?php if (!in_array($selected, ['forced', 'regular', 'default'], true)): ?>
+                            <option value="<?= e($selected) ?>" selected><?= e($selected) ?></option>
+                        <?php endif; ?>
+                        <?php foreach (['forced', 'regular', 'default'] as $option): ?>
+                            <option value="<?= e($option) ?>" <?= $selected === $option ? 'selected' : '' ?>><?= e(t('flows.flow_type_' . $option)) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php if (isset($errors['flow_type'])): ?><p class="form-error"><?= e(t($errors['flow_type'])) ?></p><?php endif; ?>
+                    <p class="form-help"><?= e(t('campaigns.rotation_hint')) ?></p>
+                </div>
+
                 <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:end">
                     <div>
                         <label class="label-uppercase" for="weight"><?= e(t('flows.weight')) ?></label>
-                        <input id="weight" name="weight" type="number" class="input" style="font-variant-numeric:tabular-nums"
-                               value="<?= (int)old('weight', $flow?->weight ?? 100) ?>">
+                        <input id="weight" name="weight" type="text" inputmode="numeric" class="input" style="font-variant-numeric:tabular-nums"
+                               value="<?= e($weightValue) ?>">
+                        <?php if (isset($errors['weight'])): ?><p class="form-error"><?= e(t($errors['weight'])) ?></p><?php endif; ?>
                     </div>
                     <div>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.875rem;font-family:var(--font-sans);color:var(--color-stone-700);padding-bottom:9px">
+                            <input type="hidden" name="is_active" value="0">
                             <input type="checkbox" id="is_active" name="is_active" value="1"
                                    <?= old('is_active', $flow?->isActive ?? true) ? 'checked' : '' ?>>
                             <?= e(t('flows.is_active')) ?>

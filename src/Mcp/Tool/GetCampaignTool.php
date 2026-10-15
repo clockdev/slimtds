@@ -25,7 +25,9 @@ final class GetCampaignTool implements ToolInterface
 
     public function description(): string
     {
-        return 'One campaign with its flows in matching order: each flow\'s filters (AND inside a group, OR across '
+        return 'One campaign with flows listed by position. Selection prioritizes forced, then regular '
+            . '(first eligible in position mode; positive relative weights in weight mode), then default fallback. '
+            . 'Each flow\'s filters (AND inside a group, OR across '
             . 'groups), target offers with weights, and what happens to clicks no flow matches (trash mode).';
     }
 
@@ -60,6 +62,7 @@ final class GetCampaignTool implements ToolInterface
                 'position'  => $fl->position,
                 'is_active' => $fl->isActive,
                 'weight'    => $fl->weight,
+                'flow_type' => $fl->flowType,
                 'filters'   => $fl->filters,
                 'offers'    => $targets,
             ];
@@ -81,6 +84,7 @@ final class GetCampaignTool implements ToolInterface
                 7 => 'js redirect to trash url',
             ][$c->trashMode] ?? (string)$c->trashMode,
             'sticky_offer'    => $c->stickyOffer,
+            'flow_rotation'   => $c->flowRotation,
             'flows'           => $flows,
         ];
     }

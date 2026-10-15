@@ -85,3 +85,24 @@ test('get_campaign labels trash modes 4-7 same as the admin UI', function (): vo
     $r = (new GetCampaignTool($this->filters, $this->campaigns, $this->flows, $this->offers))->call(['campaign' => 'mcptst']);
     expect($r['trash_mode'])->toBe('301 redirect to trash url');
 });
+
+
+test('get_campaign adds stored rotation and flow types without changing existing data or exposing tokens', function (): void {
+    $this->campaigns->update(MCP_CAMPAIGN, ['name' => 'MCP', 'slug' => 'mcptst', 'flow_rotation' => 'weight']);
+    foreach (['forced', 'regular', 'default'] as $i => $type) {
+        $this->flows->create(MCP_CAMPAIGN, ['name' => $type, 'flow_type' => $type, 'weight' => $i, 'position' => $i, 'schema_id' => 2]);
+    }
+    $before = $this->campaigns->findById(MCP_CAMPAIGN);
+    $tool = new GetCampaignTool($this->filters, $this->campaigns, $this->flows, $this->offers);
+    $r = $tool->call(['campaign' => 'mcptst']);
+    expect(array_keys($r))->toBe(['id', 'slug', 'name', 'notes', 'is_active', 'trash_mode', 'sticky_offer', 'flow_rotation', 'flows']);
+    expect($r['flow_rotation'])->toBe('weight');
+    expect(array_column($r['flows'], 'flow_type'))->toBe(['forced', 'regular', 'default']);
+    expect(array_column($r['flows'], 'weight'))->toBe([0, 1, 2]);
+    expect(array_keys($r['flows'][0]))->toBe(['name', 'position', 'is_active', 'weight', 'flow_type', 'filters', 'offers']);
+    expect($tool->description())->toContain('positive relative weights', 'default fallback');
+    expect(json_encode($r))->not->toContain('postback', $before->postbackToken);
+    expect($this->campaigns->findById(MCP_CAMPAIGN))->toEqual($before);
+    $this->campaigns->update(MCP_CAMPAIGN, ['name' => 'MCP', 'slug' => 'mcptst', 'flow_rotation' => 'position']);
+    expect($tool->call(['campaign' => 'mcptst'])['flow_rotation'])->toBe('position');
+});

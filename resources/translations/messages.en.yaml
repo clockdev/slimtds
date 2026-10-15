@@ -42,6 +42,10 @@ dashboard:
   auth_events: Auth activity
 
 campaigns:
+  flow_rotation: Flow rotation
+  flow_rotation_position: By position
+  flow_rotation_weight: By weight
+  rotation_hint: 'Relative flow weights (0–1000 integers) apply only to regular flows in weighted campaigns; zero excludes a regular flow. Small samples need not match the proportions. Offer weights are separate.'
   title: Campaigns
   copy_traffic_url: Copy traffic URL
   url_copied: 'Traffic URL copied: {url}'
@@ -100,7 +104,7 @@ campaigns:
   section_identity: Identity
   section_routing: Routing
   section_state: State
-  flows_intro: 'Routing rules, evaluated in order. Each flow holds filters (geo/device/...) and a list of target offers with weights — this is how "an offer is wired into a campaign".'
+  flows_intro: 'Forced → regular → default, after filters. Regular flows use position order or positive relative weights according to campaign mode. Offer weights are separate.'
   any_traffic: any traffic
   no_target_offers: '— no target offers (terminal schema)'
   flow_edit: edit
@@ -117,7 +121,7 @@ campaigns:
   postback_empty_title: Wire up an offer through a flow first
   postback_empty_text: 'A postback token is generated per offer. Create an offer, wire it into a flow — token and URL will appear here.'
   diagram_col_campaign: Campaign
-  diagram_col_flows: 'Flows · matched in order'
+  diagram_col_flows: 'Flows · type and campaign mode'
   diagram_col_targets: 'Targets · offers with weights'
   diagram_any_traffic: '— any traffic —'
   diagram_trash_fallback: 'Trash · fallback'
@@ -192,6 +196,10 @@ offers:
   empty_hint: 'Create your first offer — a URL with {click_id}/{country}/{payout} macros, plus a default payout.'
 
 flows:
+  flow_type: Flow type
+  flow_type_forced: Forced
+  flow_type_regular: Regular
+  flow_type_default: Default fallback
   title: Flows
   list_title: 'Flows: {campaign}'
   create: Create flow
